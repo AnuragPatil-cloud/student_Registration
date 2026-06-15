@@ -1,69 +1,207 @@
 # Student Registration Enterprise DevOps Platform - Implementation Roadmap
 
-## Phase 1: Prepare Existing Application
+## Project Overview
 
-### Current Project
+Student Registration Enterprise DevOps Platform is an enterprise-grade cloud-native application built using React, Spring Boot, and AWS RDS MariaDB.
 
-* Frontend: React (Vite)
-* Backend: Spring Boot
-* Database: MariaDB
-* Current Deployment: Docker + EC2 + RDS
+The project demonstrates a complete DevOps lifecycle including:
 
-### Verify Existing Application
+* Docker Containerization
+* Jenkins CI/CD
+* SonarQube
+* OWASP Dependency Check
+* Trivy Security Scanning
+* Terraform Infrastructure as Code
+* AWS EKS
+* Helm
+* Prometheus
+* Grafana
+* CloudWatch
+* DevSecOps Best Practices
 
-#### Backend
+---
+
+# Current Architecture
+
+```text
+Frontend (React)
+      │
+      ▼
+Backend (Spring Boot)
+      │
+      ▼
+AWS RDS MariaDB
+```
+
+Current Infrastructure:
+
+* AWS EC2
+* AWS RDS MariaDB
+* Docker
+
+---
+
+# Target Architecture
+
+```text
+GitHub
+   │
+   ▼
+Jenkins
+   │
+   ├── SonarQube
+   ├── OWASP Dependency Check
+   ├── Trivy
+   │
+   ▼
+Docker Build
+   │
+   ▼
+Docker Hub
+   │
+   ▼
+AWS EKS
+   │
+   ├── Frontend Pods
+   ├── Backend Pods
+   ├── ALB Ingress
+   └── HPA
+   │
+   ▼
+AWS RDS MariaDB
+   │
+   ▼
+Prometheus
+   │
+   ▼
+Grafana
+   │
+   ▼
+CloudWatch
+   │
+   ▼
+AlertManager
+```
+
+---
+
+# Phase 1 – Verify Existing Application
+
+## Backend Verification
+
+Navigate to backend folder
 
 ```bash
 cd backend
+```
 
+Build application
+
+```bash
 mvn clean package
+```
 
+Run application
+
+```bash
 java -jar target/*.jar
 ```
 
-#### Frontend
+Verify API
 
 ```bash
-cd frontend
-
-npm install
-
-npm run build
-
-npm run dev
-```
-
-#### Docker
-
-```bash
-docker-compose up -d
-```
-
-Verify:
-
-```bash
-docker ps
+curl http://localhost:8080
 ```
 
 Expected:
 
-* React running
-* Spring Boot running
-* MariaDB running
+```text
+Spring Boot application running successfully
+```
 
-Commit:
+---
+
+## Frontend Verification
+
+Navigate to frontend folder
+
+```bash
+cd frontend
+```
+
+Install dependencies
+
+```bash
+npm install
+```
+
+Build frontend
+
+```bash
+npm run build
+```
+
+Run frontend
+
+```bash
+npm run dev
+```
+
+Verify:
+
+```text
+http://localhost:5173
+```
+
+Expected:
+
+```text
+React application running successfully
+```
+
+---
+
+## Verify AWS RDS MariaDB
+
+Connect from EC2
+
+```bash
+mysql -h <RDS-ENDPOINT> -u admin -p
+```
+
+Example
+
+```bash
+mysql -h student-registration-db.xxxxx.ap-south-1.rds.amazonaws.com -u admin -p
+```
+
+Verify database
+
+```sql
+SHOW DATABASES;
+```
+
+Expected
+
+```text
+student_db
+```
+
+Commit Code
 
 ```bash
 git add .
-git commit -m "Initial Student Registration application"
+
+git commit -m "Verified Student Registration application"
+
 git push
 ```
 
 ---
 
-# Phase 2: Build Repository Structure
+# Phase 2 – Build Repository Structure
 
-Create Enterprise Repository
+Create Project
 
 ```bash
 mkdir Student-Registration-Enterprise
@@ -71,7 +209,7 @@ mkdir Student-Registration-Enterprise
 cd Student-Registration-Enterprise
 ```
 
-Create Structure
+Create Repository Structure
 
 ```bash
 mkdir frontend
@@ -131,69 +269,142 @@ git push
 
 ---
 
-# Phase 3: Containerization
+# Phase 3 – Containerization
 
-### Frontend Docker
-
-Create:
+## Architecture
 
 ```text
-frontend/Dockerfile
+Frontend Container
+       │
+       ▼
+Backend Container
+       │
+       ▼
+AWS RDS MariaDB
 ```
 
-### Backend Docker
+No MariaDB Docker Container.
 
-Create:
+AWS RDS MariaDB is the production database.
+
+---
+
+## Create Backend Dockerfile
+
+Location
 
 ```text
 backend/Dockerfile
 ```
 
-Build Images
+Build Image
 
 ```bash
-docker build -t student-registration-frontend frontend/
-
-docker build -t student-registration-backend backend/
+docker build -t student-registration-backend ./backend
 ```
 
-Run Containers
+Run Container
 
 ```bash
-docker run -d -p 3000:80 student-registration-frontend
-
-docker run -d -p 8080:8080 student-registration-backend
-```
-
-Push to Docker Hub
-
-```bash
-docker tag student-registration-frontend anuragpatil/student-registration-frontend:latest
-
-docker tag student-registration-backend anuragpatil/student-registration-backend:latest
-
-docker push anuragpatil/student-registration-frontend:latest
-
-docker push anuragpatil/student-registration-backend:latest
+docker run -d \
+-p 8080:8080 \
+--name student-registration-backend \
+student-registration-backend
 ```
 
 ---
 
-# Phase 4: Jenkins CI/CD
+## Create Frontend Dockerfile
 
-Install:
+Location
+
+```text
+frontend/Dockerfile
+```
+
+Build Image
+
+```bash
+docker build -t student-registration-frontend ./frontend
+```
+
+Run Container
+
+```bash
+docker run -d \
+-p 3000:80 \
+--name student-registration-frontend \
+student-registration-frontend
+```
+
+Verify
+
+```bash
+docker ps
+```
+
+Expected
+
+```text
+student-registration-backend
+
+student-registration-frontend
+```
+
+---
+
+## Push Images to Docker Hub
+
+Login
+
+```bash
+docker login
+```
+
+Tag Images
+
+```bash
+docker tag student-registration-backend anuragpatil/student-registration-backend:latest
+
+docker tag student-registration-frontend anuragpatil/student-registration-frontend:latest
+```
+
+Push Images
+
+```bash
+docker push anuragpatil/student-registration-backend:latest
+
+docker push anuragpatil/student-registration-frontend:latest
+```
+
+Commit
+
+```bash
+git add .
+
+git commit -m "Dockerized Student Registration application"
+
+git push
+```
+
+---
+
+# Phase 4 – Jenkins CI/CD
+
+Install
 
 ```text
 Jenkins
 Java 17
-Docker
 Maven
+Docker
 Trivy
 kubectl
 AWS CLI
+SonarQube Scanner
 ```
 
-Create:
+Create
 
 ```text
 jenkins/Jenkinsfile
@@ -204,38 +415,36 @@ Pipeline Flow
 ```text
 GitHub
 ↓
-Build
+Checkout
 ↓
-Test
+Maven Build
+↓
+Unit Testing
 ↓
 SonarQube
 ↓
-OWASP
+Quality Gate
 ↓
-Docker
+OWASP Dependency Check
 ↓
-Trivy
+Docker Build
 ↓
-DockerHub
+Trivy Scan
 ↓
-Deploy
-```
-
-Commit
-
-```bash
-git add .
-
-git commit -m "Jenkins pipeline added"
-
-git push
+Docker Hub
+↓
+AWS EKS Deployment
+↓
+Health Check
+↓
+Slack Notification
 ```
 
 ---
 
-# Phase 5: Terraform Infrastructure
+# Phase 5 – Terraform Infrastructure
 
-Terraform Resources
+Provision
 
 * VPC
 * Public Subnets
@@ -245,9 +454,10 @@ Terraform Resources
 * Route Tables
 * EKS Cluster
 * Managed Node Group
-* RDS MariaDB
+* AWS RDS MariaDB
 * Application Load Balancer
 * Route53
+* IAM Roles
 * S3 Backend
 
 Deploy
@@ -262,37 +472,9 @@ terraform plan
 terraform apply
 ```
 
-Expected Resources
-
-```text
-VPC
-Student Registration EKS Cluster
-RDS MariaDB
-Application Load Balancer
-Route53
-```
-
 ---
 
-# Phase 6: Kubernetes Deployment
-
-Create
-
-```text
-kubernetes/frontend/
-
-kubernetes/backend/
-
-kubernetes/ingress/
-
-kubernetes/configmaps/
-
-kubernetes/secrets/
-
-kubernetes/hpa/
-
-kubernetes/rbac/
-```
+# Phase 6 – Kubernetes Deployment
 
 Deploy
 
@@ -310,15 +492,19 @@ Expected
 
 ```text
 Frontend Pods
+
 Backend Pods
+
 Services
+
 Ingress
-Horizontal Pod Autoscaler
+
+HPA
 ```
 
 ---
 
-# Phase 7: Helm
+# Phase 7 – Helm
 
 Create Chart
 
@@ -326,7 +512,7 @@ Create Chart
 helm create student-registration-chart
 ```
 
-Deploy
+Install
 
 ```bash
 helm install student-registration helm/student-registration-chart
@@ -346,19 +532,15 @@ helm rollback student-registration 1
 
 ---
 
-# Phase 8: Monitoring
+# Phase 8 – Monitoring
 
-Install Prometheus Stack
+Install Stack
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
 helm repo update
-```
 
-Install Monitoring
-
-```bash
 helm install monitoring prometheus-community/kube-prometheus-stack
 ```
 
@@ -370,15 +552,9 @@ Components
 * Node Exporter
 * kube-state-metrics
 
-Verify
-
-```bash
-kubectl get pods -n monitoring
-```
-
 ---
 
-# Phase 9: CloudWatch
+# Phase 9 – CloudWatch
 
 Install CloudWatch Agent
 
@@ -389,24 +565,13 @@ helm install cloudwatch-agent amazon-cloudwatch/cloudwatch-agent
 Enable
 
 * Container Insights
-* Application Logs
-* Metrics Collection
-
-Verify
-
-```text
-AWS Console
-↓
-CloudWatch
-↓
-Logs
-Metrics
-Dashboards
-```
+* Logs
+* Metrics
+* Dashboards
 
 ---
 
-# Phase 10: Security
+# Phase 10 – Security
 
 Implement
 
@@ -414,7 +579,7 @@ Implement
 * Trivy
 * OWASP Dependency Check
 * Kubernetes RBAC
-* IAM Roles
+* IAM Least Privilege
 * Kubernetes Secrets
 
 Verify
@@ -423,55 +588,6 @@ Verify
 trivy image anuragpatil/student-registration-backend:latest
 
 trivy image anuragpatil/student-registration-frontend:latest
-```
-
----
-
-# Final Architecture
-
-```text
-GitHub
-   │
-   ▼
-Jenkins
-   │
-   ▼
-SonarQube
-   │
-   ▼
-OWASP Dependency Check
-   │
-   ▼
-Docker Build
-   │
-   ▼
-Trivy Security Scan
-   │
-   ▼
-Docker Hub
-   │
-   ▼
-AWS EKS (student-registration-eks)
-   │
-   ├── Frontend Pods
-   ├── Backend Pods
-   ├── ALB Ingress
-   └── HPA
-   │
-   ▼
-MariaDB RDS
-   │
-   ▼
-Prometheus
-   │
-   ▼
-Grafana
-   │
-   ▼
-CloudWatch
-   │
-   ▼
-AlertManager
 ```
 
 ---
@@ -487,17 +603,25 @@ student-registration
 # Docker Images
 
 ```text
-anuragpatil/student-registration-frontend
-
 anuragpatil/student-registration-backend
+
+anuragpatil/student-registration-frontend
 ```
 
 ---
 
-# Domain
+# EKS Cluster
 
 ```text
-student-registration.example.com
+student-registration-eks
+```
+
+---
+
+# Database
+
+```text
+AWS RDS MariaDB
 ```
 
 ---
@@ -505,10 +629,10 @@ student-registration.example.com
 # Expected Resume Achievements
 
 * Reduced deployment time from 2 hours to under 10 minutes using Jenkins CI/CD automation.
-* Automated AWS infrastructure provisioning using Terraform, reducing manual effort by 90%.
+* Automated AWS infrastructure provisioning using Terraform reducing setup effort by 90%.
 * Implemented Kubernetes rolling deployments enabling zero-downtime releases.
 * Achieved 99.9% application availability using AWS EKS and Application Load Balancer.
-* Integrated SonarQube, OWASP Dependency Check, and Trivy for automated DevSecOps scanning.
-* Reduced Mean Time To Detect (MTTD) by 60% using Prometheus, Grafana, CloudWatch, and AlertManager.
+* Integrated SonarQube, OWASP Dependency Check and Trivy for automated DevSecOps scanning.
+* Reduced Mean Time To Detect (MTTD) by 60% using Prometheus, Grafana, CloudWatch and AlertManager.
 * Implemented Horizontal Pod Autoscaling to improve scalability and resource efficiency.
-* Designed a cloud-native Student Registration platform using Docker, Kubernetes, Terraform, and AWS.
+* Designed a cloud-native Student Registration platform using Docker, Kubernetes, Terraform and AWS.
