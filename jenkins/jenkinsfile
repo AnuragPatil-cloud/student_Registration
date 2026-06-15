@@ -1,0 +1,109 @@
+pipeline {
+
+    agent any
+
+    tools {
+        jdk 'JDK17'
+        maven 'Maven'
+    }
+
+    environment {
+
+        AWS_REGION = 'ap-south-1'
+
+        EKS_CLUSTER = 'student-registration-eks'
+
+        DOCKERHUB_USER = 'anuragpatil'
+
+        BACKEND_IMAGE = 'student-registration-backend'
+
+        FRONTEND_IMAGE = 'student-registration-frontend'
+
+        SONARQUBE_SERVER = 'SonarQube'
+
+        BUILD_VERSION = "${BUILD_NUMBER}"
+    }
+
+    stages {
+
+        stage('Checkout Source') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Backend') {
+
+            steps {
+
+                dir('backend') {
+
+                    sh '''
+                    mvn clean package -DskipTests
+                    '''
+                }
+            }
+        }
+
+        stage('Unit Testing') {
+
+            steps {
+
+                dir('backend') {
+
+                    sh '''
+                    mvn test
+                    '''
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+
+            steps {
+
+                dir('backend') {
+
+                    withSonarQubeEnv("${SONARQUBE_SERVER}") {
+
+                        sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=student-registration-backend \
+                        -Dsonar.projectName=student-registration-backend
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+
+            steps {
+
+                timeout(time: 10, unit: 'MINUTES') {
+
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('OWASP Dependency Check') {
+
+            steps {
+
+                dependencyCheck(
+                    odcInstallation: 'OWASP',
+                    additionalArguments: '--scan backend --format ALL'
+                )
+            }
+        }
+
+        stage('Publish Dependency Report') {
+
+            steps {
+
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+
+        stage('
