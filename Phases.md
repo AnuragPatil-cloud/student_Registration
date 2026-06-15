@@ -1,20 +1,17 @@
-# EasyCRUD Enterprise DevOps Platform - Implementation Roadmap
+# Student Registration Enterprise DevOps Platform - Implementation Roadmap
 
 ## Phase 1: Prepare Existing Application
 
-Current Project:
+### Current Project
 
-Frontend: React (Vite)
-
-Backend: Spring Boot
-
-Database: MariaDB
-
-Current Deployment: Docker + EC2 + RDS
+* Frontend: React (Vite)
+* Backend: Spring Boot
+* Database: MariaDB
+* Current Deployment: Docker + EC2 + RDS
 
 ### Verify Existing Application
 
-Backend
+#### Backend
 
 ```bash
 cd backend
@@ -24,7 +21,7 @@ mvn clean package
 java -jar target/*.jar
 ```
 
-Frontend
+#### Frontend
 
 ```bash
 cd frontend
@@ -36,7 +33,7 @@ npm run build
 npm run dev
 ```
 
-Docker
+#### Docker
 
 ```bash
 docker-compose up -d
@@ -58,7 +55,7 @@ Commit:
 
 ```bash
 git add .
-git commit -m "Initial EasyCRUD application"
+git commit -m "Initial Student Registration application"
 git push
 ```
 
@@ -69,9 +66,9 @@ git push
 Create Enterprise Repository
 
 ```bash
-mkdir EasyCRUD-Enterprise
+mkdir Student-Registration-Enterprise
 
-cd EasyCRUD-Enterprise
+cd Student-Registration-Enterprise
 ```
 
 Create Structure
@@ -98,7 +95,7 @@ mkdir -p kubernetes/secrets
 mkdir -p kubernetes/hpa
 mkdir -p kubernetes/rbac
 
-mkdir -p helm/easycrud-chart
+mkdir -p helm/student-registration-chart
 
 mkdir -p monitoring/prometheus
 mkdir -p monitoring/grafana
@@ -136,53 +133,57 @@ git push
 
 # Phase 3: Containerization
 
-Frontend Docker
+### Frontend Docker
 
 Create:
 
+```text
 frontend/Dockerfile
+```
 
-Backend Docker
+### Backend Docker
 
 Create:
 
+```text
 backend/Dockerfile
-
-Test
-
-```bash
-docker build -t easycrud-frontend frontend/
-
-docker build -t easycrud-backend backend/
 ```
 
-Run
+Build Images
 
 ```bash
-docker run -d -p 3000:80 easycrud-frontend
+docker build -t student-registration-frontend frontend/
 
-docker run -d -p 8080:8080 easycrud-backend
+docker build -t student-registration-backend backend/
 ```
 
-Push to DockerHub
+Run Containers
 
 ```bash
-docker tag easycrud-frontend anuragpatil/easycrud-frontend:latest
+docker run -d -p 3000:80 student-registration-frontend
 
-docker tag easycrud-backend anuragpatil/easycrud-backend:latest
+docker run -d -p 8080:8080 student-registration-backend
+```
 
-docker push anuragpatil/easycrud-frontend:latest
+Push to Docker Hub
 
-docker push anuragpatil/easycrud-backend:latest
+```bash
+docker tag student-registration-frontend anuragpatil/student-registration-frontend:latest
+
+docker tag student-registration-backend anuragpatil/student-registration-backend:latest
+
+docker push anuragpatil/student-registration-frontend:latest
+
+docker push anuragpatil/student-registration-backend:latest
 ```
 
 ---
 
 # Phase 4: Jenkins CI/CD
 
-Install
+Install:
 
-```bash
+```text
 Jenkins
 Java 17
 Docker
@@ -192,14 +193,15 @@ kubectl
 AWS CLI
 ```
 
-Create
+Create:
 
 ```text
 jenkins/Jenkinsfile
 ```
 
-Pipeline
+Pipeline Flow
 
+```text
 GitHub
 ↓
 Build
@@ -217,6 +219,7 @@ Trivy
 DockerHub
 ↓
 Deploy
+```
 
 Commit
 
@@ -232,8 +235,6 @@ git push
 
 # Phase 5: Terraform Infrastructure
 
-Provision AWS
-
 Terraform Resources
 
 * VPC
@@ -245,7 +246,7 @@ Terraform Resources
 * EKS Cluster
 * Managed Node Group
 * RDS MariaDB
-* ALB
+* Application Load Balancer
 * Route53
 * S3 Backend
 
@@ -261,13 +262,13 @@ terraform plan
 terraform apply
 ```
 
-Expected
+Expected Resources
 
 ```text
 VPC
-EKS
-RDS
-ALB
+Student Registration EKS Cluster
+RDS MariaDB
+Application Load Balancer
 Route53
 ```
 
@@ -302,7 +303,7 @@ kubectl apply -f kubernetes/
 Verify
 
 ```bash
-kubectl get all -n easycrud
+kubectl get all -n student-registration
 ```
 
 Expected
@@ -312,29 +313,35 @@ Frontend Pods
 Backend Pods
 Services
 Ingress
-HPA
+Horizontal Pod Autoscaler
 ```
 
 ---
 
 # Phase 7: Helm
 
-Create
+Create Chart
 
 ```bash
-helm create easycrud-chart
+helm create student-registration-chart
 ```
 
 Deploy
 
 ```bash
-helm install easycrud helm/easycrud-chart
+helm install student-registration helm/student-registration-chart
 ```
 
 Upgrade
 
 ```bash
-helm upgrade easycrud helm/easycrud-chart
+helm upgrade student-registration helm/student-registration-chart
+```
+
+Rollback
+
+```bash
+helm rollback student-registration 1
 ```
 
 ---
@@ -349,7 +356,7 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 ```
 
-Install
+Install Monitoring
 
 ```bash
 helm install monitoring prometheus-community/kube-prometheus-stack
@@ -373,28 +380,29 @@ kubectl get pods -n monitoring
 
 # Phase 9: CloudWatch
 
-Install Agent
+Install CloudWatch Agent
 
 ```bash
-helm install cloudwatch-agent \
-amazon-cloudwatch/cloudwatch-agent
+helm install cloudwatch-agent amazon-cloudwatch/cloudwatch-agent
 ```
 
 Enable
 
 * Container Insights
 * Application Logs
-* Metrics
+* Metrics Collection
 
 Verify
 
+```text
 AWS Console
-
+↓
 CloudWatch
-
+↓
 Logs
-
 Metrics
+Dashboards
+```
 
 ---
 
@@ -405,87 +413,102 @@ Implement
 * SonarQube
 * Trivy
 * OWASP Dependency Check
-* RBAC
+* Kubernetes RBAC
 * IAM Roles
 * Kubernetes Secrets
 
 Verify
 
 ```bash
-trivy image anuragpatil/easycrud-backend:latest
+trivy image anuragpatil/student-registration-backend:latest
 
-trivy image anuragpatil/easycrud-frontend:latest
+trivy image anuragpatil/student-registration-frontend:latest
 ```
 
 ---
 
 # Final Architecture
 
+```text
 GitHub
-
-↓
-
+   │
+   ▼
 Jenkins
-
-↓
-
+   │
+   ▼
 SonarQube
-
-↓
-
-OWASP
-
-↓
-
+   │
+   ▼
+OWASP Dependency Check
+   │
+   ▼
 Docker Build
-
-↓
-
-Trivy
-
-↓
-
-DockerHub
-
-↓
-
-AWS EKS
-
-├── Frontend Pods
-
-├── Backend Pods
-
-├── ALB Ingress
-
-└── HPA
-
-↓
-
+   │
+   ▼
+Trivy Security Scan
+   │
+   ▼
+Docker Hub
+   │
+   ▼
+AWS EKS (student-registration-eks)
+   │
+   ├── Frontend Pods
+   ├── Backend Pods
+   ├── ALB Ingress
+   └── HPA
+   │
+   ▼
 MariaDB RDS
-
-↓
-
+   │
+   ▼
 Prometheus
-
-↓
-
+   │
+   ▼
 Grafana
-
-↓
-
+   │
+   ▼
 CloudWatch
-
-↓
-
+   │
+   ▼
 AlertManager
+```
+
+---
+
+# Kubernetes Namespace
+
+```text
+student-registration
+```
+
+---
+
+# Docker Images
+
+```text
+anuragpatil/student-registration-frontend
+
+anuragpatil/student-registration-backend
+```
+
+---
+
+# Domain
+
+```text
+student-registration.example.com
+```
 
 ---
 
 # Expected Resume Achievements
 
-* Reduced deployment time from 2 hours to under 10 minutes using Jenkins CI/CD.
-* Automated AWS infrastructure provisioning with Terraform reducing manual effort by 90%.
+* Reduced deployment time from 2 hours to under 10 minutes using Jenkins CI/CD automation.
+* Automated AWS infrastructure provisioning using Terraform, reducing manual effort by 90%.
 * Implemented Kubernetes rolling deployments enabling zero-downtime releases.
-* Achieved 99.9% application availability using EKS and ALB.
-* Integrated SonarQube, OWASP and Trivy for automated DevSecOps scanning.
-* Reduced incident detection time by 60% using Prometheus, Grafana and CloudWatch monitoring.
+* Achieved 99.9% application availability using AWS EKS and Application Load Balancer.
+* Integrated SonarQube, OWASP Dependency Check, and Trivy for automated DevSecOps scanning.
+* Reduced Mean Time To Detect (MTTD) by 60% using Prometheus, Grafana, CloudWatch, and AlertManager.
+* Implemented Horizontal Pod Autoscaling to improve scalability and resource efficiency.
+* Designed a cloud-native Student Registration platform using Docker, Kubernetes, Terraform, and AWS.
