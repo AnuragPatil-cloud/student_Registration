@@ -5,7 +5,7 @@ backend:
 
   image:
     repository: anuragpatilcloud/backend
-    tag: "17"
+    tag: "21"
     pullPolicy: Always
 
   service:
@@ -17,7 +17,7 @@ frontend:
 
   image:
     repository: anuragpatilcloud/frontend
-    tag: "17"
+    tag: "21"
     pullPolicy: Always
 
   service:
