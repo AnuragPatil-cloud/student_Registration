@@ -1,0 +1,13 @@
+# Terraform
+AWS/terraform/.terraform/
+AWS/terraform/*.tfstate
+AWS/terraform/*.tfstate.*
+AWS/terraform/terraform.tfvars
+
+# AWS Load Balancer Controller IAM artifacts
+aws-load-balancer-trust-policy.json
+iam_policy.json
+
+# Local environment files
+.env
+.env.*

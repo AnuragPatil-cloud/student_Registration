@@ -1,7 +1,7 @@
-# ================================
-# Stage 1: Build React application
-# ================================
-FROM node:24-alpine AS build
+# ============================================
+# Stage 1: Build
+# ============================================
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -11,15 +11,18 @@ RUN npm ci
 
 COPY . .
 
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
 RUN npm run build
 
 
-# ================================
-# Stage 2: Serve with Apache
-# ================================
+# ============================================
+# Stage 2: Runtime
+# ============================================
 FROM httpd:2.4-alpine
 
-COPY --from=build /app/dist/ /usr/local/apache2/htdocs/
+COPY --from=builder /app/dist/ /usr/local/apache2/htdocs/
 
 EXPOSE 80
 
