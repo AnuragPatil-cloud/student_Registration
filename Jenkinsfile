@@ -1,16 +1,16 @@
 pipeline {
     agent any
 
-     environment {
-    JAVA_HOME = '/usr/lib/jvm/java-21-openjdk-amd64'
-    PATH = "${JAVA_HOME}/bin:${env.PATH}"
+    environment {
+        JAVA_HOME = '/usr/lib/jvm/java-21-openjdk-amd64'
+        PATH = "${JAVA_HOME}/bin:${env.PATH}"
 
-    DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
 
-    BACKEND_IMAGE  = 'anuragpatilcloud/backend'
-    FRONTEND_IMAGE = 'anuragpatilcloud/frontend'
+        BACKEND_IMAGE  = 'anuragpatilcloud/backend'
+        FRONTEND_IMAGE = 'anuragpatilcloud/frontend'
 
-    IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -21,52 +21,41 @@ pipeline {
             }
         }
 
-       stage('Verify Java & Maven') {
+        stage('Verify Java & Maven') {
             steps {
-                    sh '''
-                    echo "JAVA_HOME=$JAVA_HOME"
-                    java -version
-                     mvn -version
-                    '''
-                }
-         }
-         stage('Verify Java & Maven') {
-             steps {
-                     sh '''
+                sh '''
                     export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
                     export PATH=$JAVA_HOME/bin:$PATH
 
                     echo "JAVA_HOME=$JAVA_HOME"
-                    echo "Java:"
                     java -version
-
-                    echo "Maven:"
-                   mvn -version
-               '''
+                    mvn -version
+                '''
             }
         }
-         stage('Backend Test') {
-             steps {
-                   dir('backend') {
-                                 sh '''
-                                  export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-                                     export PATH=$JAVA_HOME/bin:$PATH
 
-                                    echo "JAVA_HOME=$JAVA_HOME"
-                                      java -version
-                                      mvn -version
+        stage('Backend Test') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+                        export PATH=$JAVA_HOME/bin:$PATH
 
-                                    mvn clean test
-                                   '''
-               }
-           }
-       }
+                        mvn clean test
+                    '''
+                }
+            }
+        }
 
         stage('Frontend Build') {
             steps {
                 dir('frontend') {
-                    sh 'npm ci'
-                    sh 'npm run build'
+                    sh '''
+                        node --version
+                        npm --version
+                        npm ci
+                        npm run build
+                    '''
                 }
             }
         }
@@ -103,8 +92,8 @@ pipeline {
                 ]) {
                     sh '''
                         echo "$DOCKER_TOKEN" | docker login \
-                          --username "$DOCKER_USER" \
-                          --password-stdin
+                            --username "$DOCKER_USER" \
+                            --password-stdin
 
                         docker push ${BACKEND_IMAGE}:${IMAGE_TAG}
                         docker push ${FRONTEND_IMAGE}:${IMAGE_TAG}
@@ -119,7 +108,7 @@ pipeline {
             steps {
                 sh '''
                     sed -i \
-                      "s/tag: \"[^\"]*\"/tag: \"${IMAGE_TAG}\"/g" \
+                      "s/tag: \\"[^\\"]*\\"/tag: \\"${IMAGE_TAG}\\"/g" \
                       helm/student-registration/values.yaml
 
                     grep -A5 -B1 "image:" helm/student-registration/values.yaml
@@ -147,9 +136,7 @@ pipeline {
 
     post {
         always {
-            sh '''
-                docker logout || true
-            '''
+            sh 'docker logout || true'
         }
     }
 }
