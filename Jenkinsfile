@@ -1,13 +1,16 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
+     environment {
+    JAVA_HOME = '/usr/lib/jvm/java-21-openjdk-amd64'
+    PATH = "${JAVA_HOME}/bin:${env.PATH}"
 
-        BACKEND_IMAGE  = 'anuragpatilcloud/backend'
-        FRONTEND_IMAGE = 'anuragpatilcloud/frontend'
+    DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
 
-        IMAGE_TAG = "${BUILD_NUMBER}"
+    BACKEND_IMAGE  = 'anuragpatilcloud/backend'
+    FRONTEND_IMAGE = 'anuragpatilcloud/frontend'
+
+    IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -18,7 +21,16 @@ pipeline {
             }
         }
 
-        stage('Backend Test') {
+       stage('Verify Java & Maven') {
+            steps {
+                    sh '''
+                    echo "JAVA_HOME=$JAVA_HOME"
+                    java -version
+                     mvn -version
+                    '''
+                }
+         }
+         stage('Backend Test') {
             steps {
                 dir('backend') {
                     sh 'mvn clean test'
