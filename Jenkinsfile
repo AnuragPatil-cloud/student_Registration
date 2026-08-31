@@ -30,13 +30,37 @@ pipeline {
                     '''
                 }
          }
-         stage('Backend Test') {
-            steps {
-                dir('backend') {
-                    sh 'mvn clean test'
-                }
+         stage('Verify Java & Maven') {
+             steps {
+                     sh '''
+                    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+                    export PATH=$JAVA_HOME/bin:$PATH
+
+                    echo "JAVA_HOME=$JAVA_HOME"
+                    echo "Java:"
+                    java -version
+
+                    echo "Maven:"
+                   mvn -version
+               '''
             }
         }
+         stage('Backend Test') {
+             steps {
+                   dir('backend') {
+                                 sh '''
+                                  export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+                                     export PATH=$JAVA_HOME/bin:$PATH
+
+                                    echo "JAVA_HOME=$JAVA_HOME"
+                                      java -version
+                                      mvn -version
+
+                                    mvn clean test
+                                   '''
+               }
+           }
+       }
 
         stage('Frontend Build') {
             steps {
