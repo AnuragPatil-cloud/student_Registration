@@ -370,4 +370,4 @@ You'll need the following to connect the backend to the database: `DB_HOST`, `DB
 
 ---
 
-*This README was generated from the project's source, Helm/Terraform manifests, and pipeline screenshots.*
+
