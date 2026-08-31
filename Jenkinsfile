@@ -22,41 +22,31 @@ pipeline {
         }
 
         stage('Verify Java & Maven') {
-                        steps {
-                             sh '''
-                                 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-                                   export PATH=$JAVA_HOME/bin:/usr/bin:/bin
- 
-                                    echo "JAVA_HOME=$JAVA_HOME"
-                                    echo "JAVA:"
-                                    java -version
+            steps {
+                sh '''
+                    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+                    export PATH=$JAVA_HOME/bin:$PATH
 
-                                     echo "JAVAC:"
-                                     javac -version
-
-                                      echo "MAVEN:"
-                                      mvn -version
-                                 '''
-               }
+                    echo "JAVA_HOME=$JAVA_HOME"
+                    java -version
+                    javac -version
+                    mvn -version
+                '''
+            }
         }
 
         stage('Backend Test') {
-                    steps {
-                       dir('backend') {
-                                  sh '''
-                                   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-                                   export PATH=$JAVA_HOME/bin:/usr/bin:/bin
+            steps {
+                dir('backend') {
+                    sh '''
+                        export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+                        export PATH=$JAVA_HOME/bin:$PATH
 
-                                     echo "JAVA_HOME=$JAVA_HOME"
-                                       java -version
-                                      javac -version
-                                       mvn -version
-
-                                    mvn clean test
-                                 '''
-                      }
+                        mvn clean test
+                    '''
                 }
-          }
+            }
+        }
 
         stage('Frontend Build') {
             steps {
@@ -64,6 +54,7 @@ pipeline {
                     sh '''
                         node --version
                         npm --version
+
                         npm ci
                         npm run build
                     '''
@@ -75,8 +66,8 @@ pipeline {
             steps {
                 sh '''
                     docker build \
-                      -t ${BACKEND_IMAGE}:${IMAGE_TAG} \
-                      ./backend
+                        -t ${BACKEND_IMAGE}:${IMAGE_TAG} \
+                        ./backend
                 '''
             }
         }
@@ -85,9 +76,9 @@ pipeline {
             steps {
                 sh '''
                     docker build \
-                      --build-arg VITE_API_URL=/api \
-                      -t ${FRONTEND_IMAGE}:${IMAGE_TAG} \
-                      ./frontend
+                        --build-arg VITE_API_URL=/api \
+                        -t ${FRONTEND_IMAGE}:${IMAGE_TAG} \
+                        ./frontend
                 '''
             }
         }
@@ -119,34 +110,51 @@ pipeline {
             steps {
                 sh '''
                     sed -i \
-                      "s/tag: \\"[^\\"]*\\"/tag: \\"${IMAGE_TAG}\\"/g" \
-                      helm/student-registration/values.yaml
+                        "s/tag: \\"[^\\"]*\\"/tag: \\"${IMAGE_TAG}\\"/g" \
+                        helm/student-registration/values.yaml
 
-                    grep -A5 -B1 "image:" helm/student-registration/values.yaml
+                    echo "Updated image tags:"
+                    grep "tag:" helm/student-registration/values.yaml
                 '''
             }
         }
 
         stage('Commit Helm Change') {
-         steps {
-            sh '''
-               git config user.name "Jenkins CI"
-              git config user.email "jenkins@localhost"
+            steps {
+                sh '''
+                    git config user.name "Jenkins CI"
+                    git config user.email "jenkins@localhost"
 
-              git add helm/student-registration/values.yaml
+                    git add helm/student-registration/values.yaml
 
-              git commit -m \
-                "Update application images to ${IMAGE_TAG}" \
-                  || echo "No Helm changes to commit"
+                    git commit -m \
+                        "Update application images to ${IMAGE_TAG}" \
+                        || echo "No changes to commit"
+                '''
+            }
+        }
 
-              git push origin main
-            '''
-      }
-  }
+        stage('Push Helm Change') {
+            steps {
+                withCredentials([
+                    gitUsernamePassword(
+                        credentialsId: 'github-credentials',
+                        gitToolName: 'Default'
+                    )
+                ]) {
+                    sh '''
+                        git push origin HEAD:main
+                    '''
+                }
+            }
+        }
+    }
 
     post {
         always {
-            sh 'docker logout || true'
+            sh '''
+                docker logout || true
+            '''
         }
     }
 }
