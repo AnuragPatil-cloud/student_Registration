@@ -128,22 +128,21 @@ pipeline {
         }
 
         stage('Commit Helm Change') {
-            steps {
-                sh '''
-                    git config user.name "Jenkins CI"
-                    git config user.email "jenkins@localhost"
+         steps {
+            sh '''
+               git config user.name "Jenkins CI"
+              git config user.email "jenkins@localhost"
 
-                    git add helm/student-registration/values.yaml
+              git add helm/student-registration/values.yaml
 
-                    git commit -m \
-                      "Update application images to ${IMAGE_TAG}" \
-                      || echo "No Helm changes to commit"
+              git commit -m \
+                "Update application images to ${IMAGE_TAG}" \
+                  || echo "No Helm changes to commit"
 
-                    git push origin main
-                '''
-            }
-        }
-    }
+              git push origin main
+            '''
+      }
+  }
 
     post {
         always {
