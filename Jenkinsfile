@@ -47,7 +47,21 @@ pipeline {
                 }
             }
         }
+          stage('SonarQube Analysis') {
+                       steps {
+                          dir('backend') {
+                                withSonarQubeEnv('SonarQube') {
+                                                       sh '''
+                                                     export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+                                                     export PATH=$JAVA_HOME/bin:$PATH
 
+                                                      mvn sonar:sonar \
+                                                    -Dsonar.projectKey=student-registration-backend
+                                                  '''
+                }
+            }
+       }
+    }
         stage('Frontend Build') {
             steps {
                 dir('frontend') {
