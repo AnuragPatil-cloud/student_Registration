@@ -22,30 +22,41 @@ pipeline {
         }
 
         stage('Verify Java & Maven') {
-            steps {
-                sh '''
-                    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-                    export PATH=$JAVA_HOME/bin:$PATH
+                        steps {
+                             sh '''
+                                 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+                                   export PATH=$JAVA_HOME/bin:/usr/bin:/bin
+ 
+                                    echo "JAVA_HOME=$JAVA_HOME"
+                                    echo "JAVA:"
+                                    java -version
 
-                    echo "JAVA_HOME=$JAVA_HOME"
-                    java -version
-                    mvn -version
-                '''
-            }
+                                     echo "JAVAC:"
+                                     javac -version
+
+                                      echo "MAVEN:"
+                                      mvn -version
+                                 '''
+               }
         }
 
         stage('Backend Test') {
-            steps {
-                dir('backend') {
-                    sh '''
-                        export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-                        export PATH=$JAVA_HOME/bin:$PATH
+                    steps {
+                       dir('backend') {
+                                  sh '''
+                                   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+                                   export PATH=$JAVA_HOME/bin:/usr/bin:/bin
 
-                        mvn clean test
-                    '''
+                                     echo "JAVA_HOME=$JAVA_HOME"
+                                       java -version
+                                      javac -version
+                                       mvn -version
+
+                                    mvn clean test
+                                 '''
+                      }
                 }
-            }
-        }
+          }
 
         stage('Frontend Build') {
             steps {
